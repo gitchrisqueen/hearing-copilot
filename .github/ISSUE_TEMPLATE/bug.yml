@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in Hearing Copilot is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: checkboxes
+    id: services
+    attributes:
+      label: Which services were up when it happened? (check launch.command's output / logs/*.log)
+      options:
+        - label: web (8777)
+        - label: log/settings (8790)
+        - label: speaker-server / voice profiles (8791)
+        - label: ollama bridge (11500)
+        - label: whisper.cpp (8089)
+  - type: input
+    id: profile
+    attributes:
+      label: Hearing profile used
+      placeholder: "e.g. example"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: macOS version
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version / commit
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant console/server logs (redact your API keys and any real hearing content)

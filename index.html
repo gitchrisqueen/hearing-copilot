@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hearing Copilot</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="node_modules/@gitchrisqueen/copilot-core/css/base.css">
+  <link rel="stylesheet" href="app/domain.css">
+</head>
+<body>
+  <header class="appbar">
+    <h1>Hearing Copilot</h1>
+    <span class="disclaimer">Assist only, not legal advice. Confirm recording is permitted before use.</span>
+    <span class="spacer"></span>
+    <button id="reload">Reload docs</button>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: script / rebuttals / objections -->
+    <div class="col left">
+      <div class="panel" style="flex:1;">
+        <div class="tabbar" id="left-tabs">
+          <button data-view="openings" class="active">Openings</button>
+          <button data-view="rebuttals">Rebuttals</button>
+          <button data-view="objections">Objections</button>
+          <button data-view="ondeck">On deck</button>
+          <button data-view="rebuttalscript">Rebuttal Script</button>
+          <button data-view="script">Full script</button>
+        </div>
+        <div class="body" id="left-body"></div>
+      </div>
+    </div>
+
+    <!-- Vertical divider between left and right columns -->
+    <div class="col-divider" id="col-divider" role="separator" aria-orientation="vertical" title="Drag to resize columns"></div>
+
+    <!-- RIGHT: binder (top) + live copilot (bottom) -->
+    <div class="col right">
+      <div class="panel" id="binder-panel">
+        <div class="tabbar" id="binder-tabs">
+          <button data-side="def" class="active">Defendants' binder</button>
+          <button data-side="pl">Plaintiff's binder</button>
+          <button data-side="live">Live transcripts</button>
+        </div>
+        <div class="body" id="binder-body"></div>
+      </div>
+
+      <!-- Horizontal divider between binder and Live Copilot panels -->
+      <div class="row-divider" id="row-divider" role="separator" aria-orientation="horizontal" title="Drag to resize"></div>
+
+      <div class="panel" id="copilot-panel">
+        <div class="tabbar" id="copilot-tabbar">
+          <button data-cop="live" class="active">Live Copilot</button>
+          <button data-cop="whoami">Who Am I</button>
+          <button data-cop="timing">Timing</button>
+          <span class="tab-spacer"></span>
+          <button id="copilot-collapse" class="collapse-btn" title="Collapse or expand this panel">&#9662;</button>
+        </div>
+        <div class="body copilot" id="copilot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- data.js (the active hearing profile's window.CASE) loads BEFORE config.js so config.js
+       can read per-hearing overrides from window.CASE.hearingConfig (asrPrompt, clock, party
+       descriptions, page title/disclaimer). -->
+  <script src="app/data.js"></script>
+  <script src="app/config.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/md.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/shell.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/settings.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/transcript.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/asr.js"></script>
+  <!-- llm-transport.js (core) sets window.LLM with the provider-failover transport; llm.js (app)
+       adds this app's domain prompts onto that same object. -->
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/llm-transport.js"></script>
+  <script src="app/llm.js"></script>
+  <script src="app/app.js"></script>
+  <script src="node_modules/@gitchrisqueen/copilot-core/js/layout.js"></script>
+  <script>
+    // Set page chrome from the active hearing profile (window.CASE.hearingConfig).
+    (function () {
+      var hc = window.CASE && window.CASE.hearingConfig;
+      if (!hc) return;
+      if (hc.pageTitle) document.title = hc.pageTitle;
+      var d = document.querySelector('.disclaimer');
+      if (d && hc.disclaimer) d.textContent = hc.disclaimer;
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Used by app/web-server.py and app/log-server.py (both thin wrappers around copilot_core).
+# Pinned to a tag until published to PyPI; see copilot-core's release.yml / CONTRIBUTING.md.
+copilot-core @ git+https://github.com/gitchrisqueen/copilot-core@v0.1.1
+
+# The speaker-ID sidecar (app/speaker-server.py + app/speaker_engine.py) is app-local and has its
+# own separate dependencies -- see eval/diarization/requirements.txt (sherpa-onnx, numpy).

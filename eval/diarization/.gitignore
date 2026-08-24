@@ -1,0 +1,9 @@
+# Bake-off runtime artifacts. Code and results docs are committed; nothing heavy or third-party is.
+venv/
+models/
+assets/
+results/
+__pycache__/
+*.wav
+*.mp3
+*.m4a

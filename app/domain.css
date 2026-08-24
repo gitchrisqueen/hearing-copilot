@@ -1,0 +1,142 @@
+/* Hearing Copilot — app-specific styles. The shared shell (grid, panel/tabbar scaffolding,
+   dividers, collapsible copilot panel, rendered-markdown typography, card/chip/notifier/
+   transcript-list/voice-pill basics) lives in copilot-core's css/base.css, loaded before this
+   file. Selectors here either don't exist in base.css at all, or override a base value that this
+   app has always rendered slightly differently (documented inline where non-obvious). */
+
+/* PDF binder viewer: drop the panel body's padding so the iframe fills the card edge-to-edge */
+.panel > .body.flush { padding: 0; overflow: hidden; }
+
+/* Rebuttal Script: emphasized phrases = slow down / say aloud */
+.rebuttal { font-size: 1.02rem; line-height: 1.65; }
+.rebuttal p { margin: .55em 0; }
+.rebuttal strong { background: var(--hit); padding: 0 3px; border-radius: 3px; font-weight: 700; color: #3a2e00; }
+
+/* Objections-now block (top of Rebuttal Script) */
+.obj-now { border: 1px solid #f0cfa8; background: var(--warn-soft); border-radius: 9px; padding: 10px 12px; margin: 0 0 12px; }
+.obj-now-h { font-weight: 700; color: var(--warn); font-size: .84rem; margin-bottom: 6px; }
+.obj-item { font-size: .9rem; margin: 6px 0; padding-left: 2px; }
+.obj-item .id { font-weight: 700; color: var(--warn); }
+
+/* Timing tab */
+.timing .tm-inputs { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.timing .tm-inputs label { display: flex; flex-direction: column; font-size: .76rem; color: var(--muted); gap: 3px; }
+.timing .tm-inputs input { width: 78px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: .9rem; }
+.timing .tm-budget { font-size: .86rem; margin: 8px 0; }
+.timing .tm-controls { margin: 8px 0; }
+.timing .tm-grid { display: grid; grid-template-columns: 1fr auto; gap: 3px 14px; font-size: .9rem; margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+.timing .tm-grid > div:nth-child(odd) { color: var(--muted); }
+.timing .tm-warn b { color: var(--warn); }
+
+/* tracker cards (rebuttals/objections/on-deck): richer than base's generic card shell */
+.card.hit { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.card.done { opacity: .55; }
+.card .id { font-weight: 700; color: var(--accent); font-size: .82rem; white-space: nowrap; padding-top: 2px; }
+.card .pri { font-size: .64rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.card .pri-high { background: #fde3e0; color: #b32218; }
+.card .pri-med { background: #fdf0d8; color: #8a5a08; }
+.card .pri-low { background: #e7ebf1; color: #5b6472; }
+.card .cnt { font-size: .68rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.card .heard { font-weight: 600; flex: 1; }
+.card .script { margin: 8px 0 6px; font-size: .92rem; color: #21272f; }
+.card .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card label.check { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); cursor: pointer; }
+
+/* binder (case document viewer) */
+.binder-list { list-style: none; margin: 0; padding: 0; }
+.binder-list li {
+  display: flex; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.binder-list li:hover { background: var(--accent-soft); }
+.binder-list li.sel { background: var(--accent-soft); }
+.binder-list .tabno { font-weight: 700; color: var(--accent); min-width: 46px; }
+.binder-list .tt { flex: 1; font-size: .86rem; }
+.binder-list .use { font-size: .74rem; color: var(--muted); }
+.pdf-wrap { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.pdf-wrap .meta { padding: 8px 12px; font-size: .82rem; border-bottom: 1px solid var(--line); background: #fbfcfe; }
+.pdf-wrap iframe { flex: 1 1 auto; width: 100%; border: none; min-height: 0; }
+.pdf-none { padding: 20px; color: var(--muted); font-size: .88rem; }
+
+/* copilot (Live Copilot panel: speaker toggle, LLM query box) */
+.copilot .speaker-label { font-size: .8rem; font-weight: 600; color: var(--ink); margin: 8px 0 4px; }
+.copilot .speaker-label .hint { font-weight: 400; color: var(--muted); font-size: .74rem; }
+.copilot .speakers { display: flex; gap: 6px; margin-bottom: 8px; }
+.copilot .speakers button {
+  flex: 1; padding: 8px; border-radius: 7px; border: 1px solid var(--line); background: #fff;
+  cursor: pointer; font-size: .82rem; color: var(--muted);
+}
+.copilot .speakers button.on { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.copilot .speakers .kbd {
+  display: inline-block; min-width: 15px; padding: 0 3px; margin-right: 3px; border-radius: 3px;
+  background: rgba(0,0,0,.12); font-size: .72rem; font-weight: 700; text-align: center;
+}
+.copilot .speakers button.on .kbd { background: rgba(255,255,255,.28); }
+.copilot textarea {
+  width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 7px;
+  padding: 8px; font-family: inherit; font-size: .9rem; resize: vertical;
+}
+.copilot .actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.copilot .actions button.primary {
+  background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 7px; cursor: pointer; font-weight: 600;
+}
+.copilot .actions button.ghost { background: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 7px; cursor: pointer; }
+.copilot .status { font-size: .78rem; color: var(--muted); }
+.copilot .result { margin-top: 8px; font-size: .86rem; }
+.copilot .result .best { padding: 8px 10px; border-radius: 7px; background: var(--good-soft); border: 1px solid #bfe6cf; }
+.copilot .result .best b { color: var(--good); }
+
+/* live copilot header row (bare, not under .copilot -- this app's own layout) */
+.live-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.notifier { max-height: 150px; }  /* base.css default is 130px; this app has always used 150px */
+details.manual { margin-top: 8px; }
+details.manual summary { cursor: pointer; font-size: .82rem; color: var(--muted); }
+details.manual textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 7px; padding: 7px; margin-top: 6px; font-family: inherit; font-size: .88rem; }
+
+/* live transcripts */
+.deck-reason { font-size: .78rem; color: var(--muted); font-style: italic; margin: 2px 0 4px; }
+.tl-speaker { border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px; font-size: .78rem; background: #fff; }
+.tl-actions { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.llm-flag {
+  font-size: .72rem; padding: 2px 7px; border-radius: 20px; cursor: pointer; white-space: nowrap;
+  background: var(--warn-soft); color: var(--warn); border: 1px solid #f0cfa8;
+}
+.llm-flag:hover { background: #fbe3cb; }
+/* Voice auto-ID (shadow mode): the violet cousin of the amber LLM chip, plus the Voices strip. */
+.voice-flag {
+  font-size: .72rem; padding: 2px 7px; border-radius: 20px; cursor: pointer; white-space: nowrap;
+  background: #f5edff; color: #6b2fbf; border: 1px solid #d3b8f5;
+}
+.voice-flag:hover { background: #ead9ff; }
+.voice-flag.strong { border-width: 2px; font-weight: 600; }
+.voices-strip { margin: 4px 0 2px; min-height: 0; }  /* base.css default margin is 6px 0 2px */
+.vt-expected, .vt-party {
+  font-size: .72rem; padding: 2px 8px; border-radius: 14px; cursor: pointer;
+  background: #fff; color: #6b2fbf; border: 1px solid #d3b8f5;
+}
+.vt-expected { font-weight: 600; }
+.vt-expected:hover, .vt-party:hover { background: #ead9ff; }
+.vt-name { font-size: .74rem; padding: 2px 6px; width: 110px; }  /* base.css default is larger/flex */
+.voice-ghost {
+  font-size: .72rem; padding: 1px 8px; border-radius: 20px; white-space: nowrap; cursor: pointer;
+  background: #fff; color: #9a7bc9; border: 1px dashed #d3b8f5;
+}
+.voice-ghost:hover { background: #f5edff; }
+.voice-ghost.armed { background: #6b2fbf; color: #fff; border-style: solid; font-weight: 600; }
+.vmode { display: inline-flex; gap: 0; margin-left: 4px; }
+.vmode-b {
+  font-size: .68rem; padding: 2px 7px; cursor: pointer; border: 1px solid #d3b8f5;
+  background: #fff; color: #6b2fbf;
+}
+.vmode-b:first-child { border-radius: 12px 0 0 12px; }
+.vmode-b:last-child { border-radius: 0 12px 12px 0; }
+.vmode-b + .vmode-b { border-left: none; }
+.vmode-b.on { background: #6b2fbf; color: #fff; font-weight: 600; }
+.speakers.demoted button { opacity: .7; }
+
+/* Who Am I */
+.whoami { font-size: .9rem; }
+.whoami .wa-label { font-weight: 600; margin: 12px 0 4px; }
+.whoami .wa-party { display: flex; gap: 16px; }
+.whoami .wa-party label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.whoami .wa-name { width: 100%; max-width: 260px; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; font-size: .9rem; }
+.whoami .wa-preview { margin-top: 14px; padding: 8px 10px; border-radius: 7px; background: var(--accent-soft); font-size: .86rem; }

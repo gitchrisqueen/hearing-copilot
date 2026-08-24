@@ -1,0 +1,19 @@
+{
+  "name": "hearing-copilot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first live copilot for a courtroom hearing: transcribes the room, matches prepared rebuttals/objections against what opposing counsel says, and composes a woven spoken response.",
+  "license": "MIT",
+  "homepage": "https://github.com/gitchrisqueen/hearing-copilot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitchrisqueen/hearing-copilot.git"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "for f in app/*.js; do node --check \"$f\" || exit 1; done"
+  },
+  "dependencies": {
+    "@gitchrisqueen/copilot-core": "github:gitchrisqueen/copilot-core#v0.1.1"
+  }
+}

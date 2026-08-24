@@ -1,0 +1,39 @@
+# Hearing Copilot — runtime + generated files, never committed
+logs/
+app/__pycache__/
+__pycache__/
+*.pyc
+
+# Secrets — real API keys live here, injected into config.js at serve time. NEVER commit.
+.env
+
+# Per-machine settings written by the app (via log-server /settings).
+app/settings.json
+
+# Session transcript exports (contain live hearing text; keep out of the repo)
+hearing-transcript-*.txt
+
+# Real hearing profiles. hearings/example/ (the fictional demo) is the only committed profile.
+# See hearings/README.md.
+hearings/*/
+!hearings/example/
+
+# Voice profiles: biometric-adjacent voice fingerprints of real people. Local-only by design.
+voice-profiles/
+
+# Auto-downloaded speaker embedding model (~28 MB), fetched by launch.command.
+eval/diarization/models/
+eval/diarization/venv/
+eval/diarization/assets/
+eval/diarization/results/
+
+# npm / python venvs
+node_modules/
+.venv/
+
+# Private monorepo re-integration checkout (Phase D) -- never present in a standalone clone.
+app-dist/
+
+# test/CI artifacts
+coverage/
+.DS_Store
