@@ -21,8 +21,17 @@ window.CASE = {
     openingsBanner: "Demo hearing. Argue the motion to compel first if time is short.",
     // Read by llm.js's classifySpeaker/reconcile/composeRebuttal. Generic wording works fine;
     // these are here mainly so you can see where a real profile would put its own exact wording.
+    // hearingTypePhrase, hearingTypePhraseReminder, and classifySpeakerHearingPhrase are three
+    // INDEPENDENT slots (composeRebuttal's opener, composeRebuttal's writing-guidance reminder,
+    // and classifySpeaker) -- the original app used different literal wording in each spot, so
+    // setting one does not fill the others.
     hearingTypePhrase: "a civil motion hearing",
+    hearingTypePhraseReminder: "a civil motion hearing (no jury)",
+    classifySpeakerHearingPhrase: "a civil motion hearing",
     reconcileHearingPhrase: "a civil motion hearing",
+    // citationBoldNote and dispositiveWinnersNote are left UNSET here on purpose: both name real
+    // record specifics (concrete rule/statute cites, which burden controls) rather than generic
+    // hearing-type wording, so they belong in a private profile, not this public demo.
     plaintiffRoleDescription: "counsel for the moving party seeking to compel discovery. Cues: " +
       "'we respectfully request', 'plaintiff moves', 'we ask the Court to compel'",
     defendantRoleDescription: "the pro se defendant, OPPOSING the motion to compel. Cues: " +
