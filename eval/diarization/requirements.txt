@@ -1,4 +1,4 @@
-sherpa-onnx==1.13.4
+sherpa-onnx==1.13.6
 numpy>=2.5.2
 # Shared embedding/clustering engine; pinned to a tag until published to PyPI.
 copilot-core @ git+https://github.com/gitchrisqueen/copilot-core@v0.1.1
