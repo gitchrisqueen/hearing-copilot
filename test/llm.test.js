@@ -54,7 +54,7 @@ test("llm: classifySpeaker uses generic party descriptions when no hearing profi
 
 test("llm: classifySpeaker uses the active hearing profile's overrides when set", async () => {
   const CASE = { hearingConfig: {
-    hearingTypePhrase: "a fictional civil summary-judgment hearing",
+    classifySpeakerHearingPhrase: "a fictional civil summary-judgment hearing",
     plaintiffRoleDescription: "counsel for Fictional Plaintiff Co, the moving party",
     defendantRoleDescription: "Fictional Defendant, PRO SE, opposing summary judgment"
   } };
@@ -64,6 +64,23 @@ test("llm: classifySpeaker uses the active hearing profile's overrides when set"
   assert.match(sys, /a fictional civil summary-judgment hearing/);
   assert.match(sys, /Fictional Plaintiff Co/);
   assert.match(sys, /Fictional Defendant, PRO SE/);
+});
+
+test("llm: classifySpeaker's hearing-phrase field is independent of composeRebuttal's (they held two different original strings)", async () => {
+  const CONFIG = { llm: { ollama: { url: "http://fake-ollama.invalid", model: "test-model" } } };
+  const CASE = { hearingConfig: { classifySpeakerHearingPhrase: "CLASSIFY_ONLY_PHRASE", hearingTypePhrase: "COMPOSE_ONLY_PHRASE" } };
+  const { win, chatCalls, fetchCalls } = boot({
+    CASE: CASE, CONFIG: CONFIG, providerList: ["ollama"],
+    chatJSONImpl: () => Promise.resolve({ speaker: "court", confidence: 0.9 }),
+    fetchImpl: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ message: { content: "x" } }) })
+  });
+  await win.LLM.classifySpeaker("So ordered.");
+  await win.LLM.composeRebuttal({ points: [], objections: [] });
+  assert.match(chatCalls[0].sys, /CLASSIFY_ONLY_PHRASE/);
+  assert.doesNotMatch(chatCalls[0].sys, /COMPOSE_ONLY_PHRASE/);
+  const composeSys = JSON.parse(fetchCalls[0].init.body).messages[0].content;
+  assert.match(composeSys, /COMPOSE_ONLY_PHRASE/);
+  assert.doesNotMatch(composeSys, /CLASSIFY_ONLY_PHRASE/);
 });
 
 test("llm: classifySpeaker rejects an unrecognized role and defaults confidence", async () => {
@@ -190,6 +207,37 @@ test("llm.composeRebuttal: hearingTypePhrase and hearingTypePhraseReminder are t
   assert.match(sys, /This is a live REMINDER_PHRASE_UNIQUE\. Argue like an advocate/, "the writing-guidance reminder slot must use hearingTypePhraseReminder");
   assert.doesNotMatch(sys, /at REMINDER_PHRASE_UNIQUE\./, "the reminder phrase must never leak into the opener slot");
   assert.doesNotMatch(sys, /live OPENER_PHRASE_UNIQUE/, "the opener phrase must never leak into the reminder slot");
+});
+
+test("llm.composeRebuttal: citationBoldNote and dispositiveWinnersNote are omitted by default but inserted verbatim when a hearing profile sets them", async () => {
+  // Regression test for a second real fidelity gap found alongside the hearingPhrase bug: the
+  // original app's emphasis-rule bullet (a) carried concrete example citations plus a "never
+  // bold a bare 'Rule'" caveat, and its "Lead with the most DISPOSITIVE winners" line carried a
+  // case-specific parenthetical explaining what that meant for this record. Both were dropped
+  // entirely (not just genericized) when ported -- correct for the public default, but only if a
+  // real profile can restore them, which neither field originally existed to do.
+  const CONFIG = { llm: { ollama: { url: "http://fake-ollama.invalid", model: "test-model" } } };
+  const { win: winDefault, fetchCalls: callsDefault } = boot({
+    CONFIG: CONFIG, providerList: ["ollama"],
+    fetchImpl: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ message: { content: "x" } }) })
+  });
+  await winDefault.LLM.composeRebuttal({ points: [], objections: [] });
+  const sysDefault = JSON.parse(callsDefault[0].init.body).messages[0].content;
+  assert.match(sysDefault, /INCLUDING its subsection; \(b\) every case name/, "no dash/example insertion when unset");
+  assert.match(sysDefault, /Lead with the most DISPOSITIVE winners before secondary/, "no parenthetical when unset");
+
+  const CASE = { hearingConfig: {
+    citationBoldNote: "'**Rule 9.999**' - never bold a bare 'Rule'",
+    dispositiveWinnersNote: "the opponent's failure to carry its burden on standing"
+  } };
+  const { win: winSet, fetchCalls: callsSet } = boot({
+    CASE: CASE, CONFIG: CONFIG, providerList: ["ollama"],
+    fetchImpl: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ message: { content: "x" } }) })
+  });
+  await winSet.LLM.composeRebuttal({ points: [], objections: [] });
+  const sysSet = JSON.parse(callsSet[0].init.body).messages[0].content;
+  assert.match(sysSet, /INCLUDING its subsection - '\*\*Rule 9\.999\*\*' - never bold a bare 'Rule'; \(b\) every case name/);
+  assert.match(sysSet, /Lead with the most DISPOSITIVE winners \(the opponent's failure to carry its burden on standing\) before secondary/);
 });
 
 test("llm.composeRebuttal: falls back to the two distinct generic defaults when no hearing profile override is set", async () => {

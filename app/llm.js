@@ -201,7 +201,12 @@
   // hearings/README.md for how a private hearing profile overrides them.
   function classifySpeaker(text) {
     var hc = HC();
-    var hearingPhrase = hc.hearingTypePhrase || "a civil motion hearing";
+    // A DIFFERENT config field than composeRebuttal's hearingTypePhrase, deliberately: the
+    // original app used two distinct literal strings here ("a Florida civil SUMMARY-JUDGMENT
+    // hearing", all-caps compound) and in composeRebuttal's opener ("a Florida civil
+    // summary-judgment hearing", lowercase) -- sharing one field would silently overwrite
+    // whichever function didn't win, the same class of bug hearingTypePhraseReminder fixed above.
+    var hearingPhrase = hc.classifySpeakerHearingPhrase || "a civil motion hearing";
     var plaintiffDesc = hc.plaintiffRoleDescription ||
       "counsel for the moving party seeking summary judgment. Cues: 'we respectfully request', " +
       "'plaintiff moves', 'we ask the Court to', 'summary judgment should be granted'";
@@ -397,6 +402,12 @@
     // only one of them.
     var hearingPhrase = HC().hearingTypePhrase || "a civil summary-judgment hearing";
     var hearingPhraseReminder = HC().hearingTypePhraseReminder || "a civil summary-judgment hearing (no jury)";
+    // Two more optional real-case insertions, both empty (omitted entirely) by default: a real
+    // profile can set hearingConfig.citationBoldNote to name its own specific rule/statute cites
+    // as always-bold examples (e.g. concrete Rule/section numbers plus a "never bold a bare X"
+    // caveat), and hearingConfig.dispositiveWinnersNote to spell out what "dispositive winners"
+    // means for that case (e.g. which burden/element controls). Neither is generic legal
+    // knowledge -- both name real record specifics -- so the public default carries none of it.
     var sys =
       "ROLE: You ghost-write the exact words that " + me.name + " will SPEAK aloud, in the first person, right now " +
       "at " + hearingPhrase + ". You are the " + meRole + "'s advocate and you write ONLY the " +
@@ -455,7 +466,7 @@
       "- EMPHASIS (**double asterisks**) marks the words the speaker slows down and the judge is meant to " +
       "remember. It is the most valuable formatting you control, so spend it only on load-bearing text.\n" +
       "  ALWAYS wrap in **double asterisks**: (a) every rule or statute cite exactly as written, INCLUDING its " +
-      "subsection; (b) every case name; (c) every Tab or exhibit reference; " +
+      "subsection" + (HC().citationBoldNote ? " - " + HC().citationBoldNote : "") + "; (b) every case name; (c) every Tab or exhibit reference; " +
       "(d) every dollar figure; (e) every operative DATE and deadline (the date of an order, a response deadline, " +
       "a cure deadline, the number of days you ask for); (f) every specific record item you name - a numbered " +
       "request for admission, interrogatory, or request for production, a named form or filing, a named entity; " +
@@ -483,7 +494,8 @@
       "- If the opponent asserted that something is 'undisputed', 'not contested', 'established', or 'sufficient' " +
       "and an on-deck point contradicts it, CORRECT that characterization head-on in plain words ('We do contest " +
       "that, and here is why...') rather than letting it stand.\n" +
-      "- Lead with the most DISPOSITIVE winners before secondary or procedural points.\n" +
+      "- Lead with the most DISPOSITIVE winners" + (HC().dispositiveWinnersNote ? " (" + HC().dispositiveWinnersNote + ")" : "") +
+      " before secondary or procedural points.\n" +
       "- Where it fits, close a major point with the conclusion that a **genuine dispute of material fact** exists " +
       "and the case must go to trial - but say this at most twice total, not after every paragraph.\n" +
       "- Work in the provided POWER PHRASES verbatim where they fit naturally; do not stack them back-to-back.\n" +
