@@ -47,9 +47,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: no private/case terms committed
         run: |
-          if git grep -qriE 'amur|old gold|christopher queen|michael williams|karla beran|umb bank|navitas|norton|aragona' -- . ':!.github/workflows/ci.yml'; then
+          # Excludes: this workflow file (contains the search terms themselves), LICENSE (the
+          # repo owner's own name in the copyright line is expected in every public repo under
+          # their account, same as README/package author fields elsewhere), and the test suite
+          # (asserts the ABSENCE of these terms in a rendered prompt via doesNotMatch -- the
+          # terms appear in the test's own source as a negative-match regex, not as content).
+          EXCLUDE=(':!.github/workflows/ci.yml' ':!LICENSE' ':!test/**')
+          PATTERN='amur|old gold|christopher queen|michael williams|karla beran|umb bank|navitas|norton|aragona'
+          if git grep -qriE "$PATTERN" -- . "${EXCLUDE[@]}"; then
             echo "Found a private-term match -- see CONTRIBUTING.md."
-            git grep -riE 'amur|old gold|christopher queen|michael williams|karla beran|umb bank|navitas|norton|aragona' -- . ':!.github/workflows/ci.yml'
+            git grep -riE "$PATTERN" -- . "${EXCLUDE[@]}"
             exit 1
           fi
           echo "clean"

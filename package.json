@@ -1,6 +1,6 @@
 {
   "name": "hearing-copilot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Local-first live copilot for a courtroom hearing: transcribes the room, matches prepared rebuttals/objections against what opposing counsel says, and composes a woven spoken response.",
   "license": "MIT",
