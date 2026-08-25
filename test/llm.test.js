@@ -6,10 +6,17 @@ const { load, sameJSON } = require("./harness");
 function boot(opts) {
   opts = opts || {};
   const chatCalls = [];
+  const fetchCalls = [];
   const win = {
     console: console,
-    CONFIG: { llm: {} },
+    CONFIG: opts.CONFIG || { llm: {} },
     CASE: opts.CASE || { hearingConfig: {} },
+    AbortController: class { constructor() { this.signal = {}; } abort() {} },
+    setTimeout: setTimeout, clearTimeout: clearTimeout,
+    fetch: function (url, init) {
+      fetchCalls.push({ url: url, init: init });
+      return opts.fetchImpl ? opts.fetchImpl(url, init) : Promise.resolve({ ok: false });
+    },
     LLM: {
       chatJSON: function (sys, usr, o) {
         chatCalls.push({ sys: sys, usr: usr, opts: o });
@@ -24,7 +31,7 @@ function boot(opts) {
     }
   };
   load(win, "app/llm.js");
-  return { win, chatCalls };
+  return { win, chatCalls, fetchCalls };
 }
 
 test("llm: extends window.LLM rather than replacing it (core's transport survives)", () => {
@@ -154,4 +161,48 @@ test("llm._internal.capEmphasisRepeats: strips markers past the cap without remo
 test("llm._internal.objectionCovered: true when nothing distinctive remains to check", () => {
   const { win } = boot();
   assert.equal(win.LLM._internal.objectionCovered("anything", "", ""), true);
+});
+
+test("llm.composeRebuttal: hearingTypePhrase and hearingTypePhraseReminder are two independent slots, not one shared variable", async () => {
+  // Regression test for a real fidelity bug: composeRebuttal names the hearing type TWICE, in
+  // different wording each time (once in the sentence-opener, once deep in the writing guidance).
+  // Collapsing both into a single config field made it impossible for a real hearing profile to
+  // reproduce the original app's two genuinely different literal phrases at once.
+  const CASE = { hearingConfig: {
+    hearingTypePhrase: "OPENER_PHRASE_UNIQUE",
+    hearingTypePhraseReminder: "REMINDER_PHRASE_UNIQUE"
+  } };
+  const CONFIG = { llm: { ollama: { url: "http://fake-ollama.invalid", model: "test-model" } } };
+  const { win, fetchCalls } = boot({
+    CASE: CASE,
+    CONFIG: CONFIG,
+    providerList: ["ollama"],
+    fetchImpl: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ message: { content: "Your Honor, ..." } }) })
+  });
+  await win.LLM.composeRebuttal({
+    me: { label: "Defendant", name: "the defendant", role: "opposing summary judgment" },
+    opponent: { label: "Plaintiff", name: "the opposing party", role: "" },
+    points: [], objections: []
+  });
+  assert.equal(fetchCalls.length, 1, "composeOne should have made exactly one fetch call");
+  const sys = JSON.parse(fetchCalls[0].init.body).messages[0].content;
+  assert.match(sys, /at OPENER_PHRASE_UNIQUE\. You are the Defendant's advocate/, "the sentence-opener slot must use hearingTypePhrase");
+  assert.match(sys, /This is a live REMINDER_PHRASE_UNIQUE\. Argue like an advocate/, "the writing-guidance reminder slot must use hearingTypePhraseReminder");
+  assert.doesNotMatch(sys, /at REMINDER_PHRASE_UNIQUE\./, "the reminder phrase must never leak into the opener slot");
+  assert.doesNotMatch(sys, /live OPENER_PHRASE_UNIQUE/, "the opener phrase must never leak into the reminder slot");
+});
+
+test("llm.composeRebuttal: falls back to the two distinct generic defaults when no hearing profile override is set", async () => {
+  const CONFIG = { llm: { ollama: { url: "http://fake-ollama.invalid", model: "test-model" } } };
+  const { win, fetchCalls } = boot({
+    CONFIG: CONFIG,
+    providerList: ["ollama"],
+    fetchImpl: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ message: { content: "Your Honor, ..." } }) })
+  });
+  await win.LLM.composeRebuttal({ points: [], objections: [] });
+  const sys = JSON.parse(fetchCalls[0].init.body).messages[0].content;
+  assert.match(sys, /at a civil summary-judgment hearing\. You are the Defendant's advocate/);
+  assert.match(sys, /This is a live a civil summary-judgment hearing \(no jury\)\. Argue like an advocate/);
+  // The whole point of parameterizing this: no real party/case names in the default prompt.
+  assert.doesNotMatch(sys, /amur|old gold|christopher queen|michael williams/i);
 });

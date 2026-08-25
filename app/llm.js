@@ -390,8 +390,13 @@
     var meRole = me.label || "Defendant";      // "Defendant" | "Plaintiff"
     var oppRole = opp.label || "Plaintiff";
     // Generic by default; a real profile can set hearingConfig.hearingTypePhrase to the exact
-    // original wording (e.g. "a Florida civil summary-judgment hearing").
+    // original wording (e.g. "a Florida civil summary-judgment hearing"). This prompt names the
+    // hearing type TWICE, in different phrasing each time (one sentence-opener, one reminder deep
+    // in the writing guidance) -- a separate field for the second spot, rather than reusing the
+    // same variable, so a real profile can reproduce BOTH original strings exactly rather than
+    // only one of them.
     var hearingPhrase = HC().hearingTypePhrase || "a civil summary-judgment hearing";
+    var hearingPhraseReminder = HC().hearingTypePhraseReminder || "a civil summary-judgment hearing (no jury)";
     var sys =
       "ROLE: You ghost-write the exact words that " + me.name + " will SPEAK aloud, in the first person, right now " +
       "at " + hearingPhrase + ". You are the " + meRole + "'s advocate and you write ONLY the " +
@@ -439,7 +444,7 @@
       "the point; (3) state what the Court should therefore do. Give each point enough to actually land - this is " +
       "the 'meat'. Never pad, never repeat, and do not simply restate what opposing counsel already said or reread " +
       "the briefs; add the analysis that DEFEATS their point.\n" +
-      "- This is a live " + hearingPhrase + " (no jury). Argue like an advocate at the " +
+      "- This is a live " + hearingPhraseReminder + ". Argue like an advocate at the " +
       "podium: lead with the dispositive burden/standing points, tie every assertion to the record, keep it " +
       "focused and professional, and never concede an element you were not told to concede.\n" +
       "- You may open each paragraph with a plain connector ('First,' 'Next,' 'Finally,') or none; do not manufacture " +
