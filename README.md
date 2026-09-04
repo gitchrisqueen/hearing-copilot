@@ -63,9 +63,10 @@ For a real hearing, **never commit your hearing profile to this repo** -- see
 
 ## The plugin API
 
-`window.HearingCopilot` exposes `trigger(id)`, `markHandled(id)`, `openTab(view)`, `setLive(on)`,
-`logSegment(speaker, text)`, `sortOnDeck()`, `items()`, `getState()` -- useful from the browser
-console for testing, or for driving the app from another tool.
+`window.HearingCopilot` exposes `trigger(id)`, `markHandled(id)`, `openTab(tabRef)` (a binder tab
+reference such as `"Tab 3"` or `"P-2"`), `setLive(on)`, `logSegment(speaker, text)`, `sortOnDeck()`,
+`items()`, `getState()` -- useful from the browser console for testing, or for driving the app from
+another tool.
 
 ## Architecture and ports
 
@@ -97,11 +98,12 @@ engine from it).
 
 **Why the speaker-ID sidecar isn't part of copilot-core**: the voice-embedding and clustering
 engine itself is shared and does live in copilot-core (`copilot_core.speaker.engine`, which
-`eval/diarization/engine.py` imports). This app still ships its own copy of that engine as
-`app/speaker_engine.py` (it imports only `numpy` and `sherpa-onnx`, not copilot-core), and
-`app/speaker-server.py` adds the part that is specific to this app: mapping anonymous voice
-clusters to courtroom parties from your toggle history. Folding the app's copy back onto the
-shared module is not done yet.
+`eval/diarization/engine.py` imports). This app still ships its own diverged fork of that engine
+as `app/speaker_engine.py` (same embedding and clustering math, but a different API: a per-profile
+party field, `enroll()`, and `confirm()` keyed by party rather than profile id; it imports only
+`numpy` and `sherpa-onnx`, not copilot-core), and `app/speaker-server.py` adds the part that is
+specific to this app: mapping anonymous voice clusters to courtroom parties from your toggle
+history. Reconciling the app's fork with the shared module is not done yet.
 
 ## Local models and audio setup
 
@@ -147,8 +149,9 @@ downloads a ~28 MiB CAM++ embedding model on first run. Without it, every remote
 
 See the heavily-commented `app/config.js` for VAD thresholds (`asr.vad`), match strength
 (`match.minMatchScore`), and the reconciliation pass's ceilings (`reconcile.maxPoints`/
-`maxObjections`). A hearing profile's `hearingConfig` can override several of these per hearing
--- see [hearings/README.md](hearings/README.md).
+`maxObjections`). A hearing profile's `hearingConfig` can override the match strength per hearing
+(`minMatchScore`); the VAD thresholds and reconciliation ceilings are `config.js`-only -- see
+[hearings/README.md](hearings/README.md).
 
 ### Logs
 
@@ -166,8 +169,9 @@ debugging a session after the fact.
   possible future addition, not implemented.
 - The per-machine settings store (`app/settings.json` via the log server's `/settings`) is served
   but not wired into this app's browser code yet; configuration is `app/config.js` only.
-- `app/speaker_engine.py` duplicates the engine that now lives in copilot-core; the app has not
-  been switched over to import the shared copy.
+- `app/speaker_engine.py` is a diverged fork of the engine that now lives in copilot-core
+  (different `Profile`, `label`, and `confirm` signatures, plus `enroll()`); the app has not been
+  reconciled with the shared module.
 
 ## Development, testing, and contributing
 

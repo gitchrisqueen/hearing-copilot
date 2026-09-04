@@ -47,8 +47,8 @@ on; secret scanning + push protection on.
 
 ## Coverage policy
 
-`codecov.yml`'s `project` target tracks the real measured baseline (not 80%) and can only ratchet
-up (`threshold: 0`); the `patch` target holds all NEW code to 80% from day one. `app.js` (all
+`codecov.yml`'s `project` target (12%) sits at or below the measured baseline (not 80%) and can only
+ratchet up (`threshold: 0`); the `patch` target holds all NEW code to 80% from day one. `app.js` (all
 rendering/wiring) and `app/config.js` currently have zero dedicated coverage -- see README.md's
 "Development, testing, and contributing" section for why, and raise the project target in
 `codecov.yml` as dedicated test PRs land. Never lower it, and never add a coverage exclude to make
