@@ -29,7 +29,7 @@ entirely.
 # 1) Core tools
 brew install ollama blackhole-2ch
 
-# 2) Secrets (optional but recommended: Together AI gives the best transcription)
+# 2) Secrets (optional; with a Together AI key the app uses hosted transcription first)
 cp example.env .env      # then edit .env and fill in your keys
 
 # 3) Launch with the fictional demo hearing profile
@@ -46,8 +46,9 @@ For a real hearing, **never commit your hearing profile to this repo** -- see
 ## What works right now
 
 - Live transcription of both sides (a meeting/courtroom audio feed via BlackHole, and your own
-  mic), with a tiered fallback: Together AI (hosted) -> local whisper.cpp -> the browser's Web
-  Speech API.
+  mic). With a Together AI key, hosted transcription is tried first and falls back to a local
+  whisper.cpp server automatically. The browser's Web Speech API is a separate engine you select
+  by hand (`asr.engine: "webspeech"` in `app/config.js`), not an automatic third tier.
 - Keyword + LLM matching of what the other side says against your prepared rebuttal/objection
   catalog, queued to an On-deck list, reordered by defense strength.
 - A whole-transcript reconciliation pass that periodically re-checks the On-deck list against the
@@ -55,7 +56,7 @@ For a real hearing, **never commit your hearing profile to this repo** -- see
   that were missed by the fast per-line matcher.
 - A composed spoken rebuttal woven from the On-deck points, with **emphasis** on the phrases you
   should slow down and land, sized to fit your remaining speaking time.
-- Voice-ID (shadow/assist modes): fingerprints each utterance so a panel of unnamed speakers
+- Voice-ID (shadow/assist/auto modes, `speakerId.mode` in `app/config.js`): fingerprints each utterance so a panel of unnamed speakers
   becomes separate tagged voices, mapped to parties from your own "who's speaking" toggle history.
 - A document binder pane (PDF viewer) for both sides' exhibits, and a Who Am I tab to set which
   party you represent.
@@ -90,20 +91,26 @@ Frontend: vanilla JS, no bundler, no build step, no CDN -- `js/*.js` from
 `@gitchrisqueen/copilot-core` plus this app's own `app/*.js`, loaded via plain `<script>` tags
 (see `index.html` for the required order). Backend: Python 3 stdlib sidecars (the only pip
 dependency for the web/log servers is `copilot-core` itself; the speaker-ID sidecar separately
-needs `numpy` + `sherpa-onnx`, in its own venv -- see `eval/diarization/requirements.txt`).
+needs `numpy` + `sherpa-onnx`, in its own venv -- see `eval/diarization/requirements.txt`, which
+also pins `copilot-core` because the offline eval harness in that directory imports the shared
+engine from it).
 
-**Why the speaker-ID sidecar isn't part of copilot-core**: its voice-embedding math is shared
-with tech-interview-copilot (both came from the same original engine), but this app's version
-additionally maps anonymous voice clusters to courtroom parties from your toggle history --
-policy that's specific to this app and doesn't belong in the shared package. See
-`app/speaker_engine.py` and `app/speaker-server.py`.
+**Why the speaker-ID sidecar isn't part of copilot-core**: the voice-embedding and clustering
+engine itself is shared and does live in copilot-core (`copilot_core.speaker.engine`, which
+`eval/diarization/engine.py` imports). This app still ships its own copy of that engine as
+`app/speaker_engine.py` (it imports only `numpy` and `sherpa-onnx`, not copilot-core), and
+`app/speaker-server.py` adds the part that is specific to this app: mapping anonymous voice
+clusters to courtroom parties from your toggle history. Folding the app's copy back onto the
+shared module is not done yet.
 
 ## Local models and audio setup
 
 ### The LLM (matching + On-deck ordering)
 
 Default provider chain: local Ollama (bridging Ollama Cloud) -> OpenAI -> Groq, all
-OpenAI-compatible/JSON-mode. Everything fails soft to keyword-only matching if no LLM answers.
+OpenAI-compatible/JSON-mode (`llm.fallback` in `app/config.js`). The reconciliation pass has its
+own shorter list, Ollama -> OpenAI (`reconcile.providers`). Everything fails soft to keyword-only
+matching if no LLM answers.
 Put your keys in `.env` (see `example.env`); `web-server.py` injects them into `config.js` at
 serve time and they never enter the repo or the browser's localStorage.
 
@@ -118,20 +125,22 @@ normally.
    check your headphones/speakers AND **BlackHole 2ch**. Set your headphones as primary and
    enable Drift Correction on BlackHole.
 3. Set the meeting/system output to the Multi-Output Device.
-4. In `app/config.js` (or a per-machine override in `app/settings.json`), set
-   `asr.inputDeviceLabel` to match BlackHole's device name.
+4. In `app/config.js`, set `asr.inputDeviceLabel` to match BlackHole's device name. (The
+   log server exposes a `/settings` store for a per-machine `app/settings.json`, but this app
+   does not set `CONFIG.settingsUrl` and never calls it, so edits belong in `config.js` for now.)
 
 ### Transcription -- local whisper.cpp (optional fallback)
 
 `launch.command` starts a local `whisper-server` if it finds a binary and a model
 (`WHISPER_SERVER_BIN` / `WHISPER_MODEL` env vars, or the defaults it checks). Without a Together
-key or a local whisper server, the app falls back to the browser's Web Speech API.
+key, local whisper.cpp is the only transcriber the default config uses; if neither is available,
+switch `asr.engine` to `"webspeech"` in `app/config.js` to use the browser's Web Speech API.
 
 ### Speaker auto-detection (voice profiles)
 
 Optional. `launch.command` sets up its own Python venv under `eval/diarization/venv` (separate
-from the venv used for the web/log servers) with `sherpa-onnx` + `numpy`, and downloads a ~28 MB
-CAM++ embedding model on first run. Without it, every remote line is labeled by your manual
+from the venv used for the web/log servers) from `eval/diarization/requirements.txt`, and
+downloads a ~28 MiB CAM++ embedding model on first run. Without it, every remote line is labeled by your manual
 "who's speaking" toggle only -- nothing else breaks.
 
 ### Tuning transcription and matching
@@ -155,6 +164,10 @@ debugging a session after the fact.
 - Recording rules vary. Confirm with the court/venue before using live capture.
 - This build targets macOS (BlackHole for loopback audio). Windows support (via VB-Cable) is a
   possible future addition, not implemented.
+- The per-machine settings store (`app/settings.json` via the log server's `/settings`) is served
+  but not wired into this app's browser code yet; configuration is `app/config.js` only.
+- `app/speaker_engine.py` duplicates the engine that now lives in copilot-core; the app has not
+  been switched over to import the shared copy.
 
 ## Development, testing, and contributing
 
@@ -165,7 +178,7 @@ npm install && npm test          # node:test, against app/llm.js (fictional-prof
 Test coverage is intentionally honest, not padded: `app/llm.js`'s pure logic (grounding checks,
 emphasis rules, the classifySpeaker parameterization that keeps real party names out of this
 public repo) is covered; `app.js` (all rendering/wiring) has no dedicated tests yet.
-`codecov.yml`'s project target tracks the real measured baseline and only ratchets up -- see
+`codecov.yml`'s project target (12%) sits at or below the measured baseline and only ratchets up -- see
 [CONTRIBUTING.md](CONTRIBUTING.md) for the branch protection and CI setup, including how a solo
 maintainer satisfies a required-review gate.
 
