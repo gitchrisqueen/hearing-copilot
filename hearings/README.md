@@ -26,13 +26,19 @@ control -- not in this public one.
 
 ### `hearingConfig` fields worth knowing about
 
-Most of `hearingConfig` is app behavior (clock, match thresholds, page title). Four fields carry
-the LLM prompt text that varies by hearing type and jurisdiction -- set these to your hearing's
-exact wording if you want prompt behavior identical to a prior, more specific version:
+Most of `hearingConfig` is app behavior (clock, match thresholds, page title). Eight fields carry
+the LLM prompt text that varies by hearing type and jurisdiction (each one is read in
+`app/llm.js`) -- set these to your hearing's exact wording if you want prompt behavior identical
+to a prior, more specific version:
 
-- `hearingTypePhrase` / `reconcileHearingPhrase` -- e.g. `"a Florida civil summary-judgment hearing"`
+- `hearingTypePhrase` / `hearingTypePhraseReminder` -- the `composeRebuttal` opener and its
+  reminder line, e.g. `"a Florida civil summary-judgment hearing"`
+- `classifySpeakerHearingPhrase` / `reconcileHearingPhrase` -- the same idea for the speaker
+  classifier and the whole-transcript reconciliation pass (deliberately separate slots)
 - `plaintiffRoleDescription` / `defendantRoleDescription` -- the real party names and the specific
   legal theory in play (see `app/llm.js`'s `classifySpeaker` for where these land)
+- `citationBoldNote` / `dispositiveWinnersNote` -- optional extra instructions inserted verbatim
+  into the `composeRebuttal` prompt; omitted when unset
 
 ## Re-integrating into a private case-documents repo
 
