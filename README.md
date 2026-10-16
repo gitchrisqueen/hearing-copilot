@@ -183,8 +183,8 @@ Test coverage is intentionally honest, not padded: `app/llm.js`'s pure logic (gr
 emphasis rules, the classifySpeaker parameterization that keeps real party names out of this
 public repo) is covered; `app.js` (all rendering/wiring) has no dedicated tests yet.
 `codecov.yml`'s project target (12%) sits at or below the measured baseline and only ratchets up -- see
-[CONTRIBUTING.md](CONTRIBUTING.md) for the branch protection and CI setup, including how a solo
-maintainer satisfies a required-review gate.
+[CONTRIBUTING.md](CONTRIBUTING.md) for the branch protection and CI setup for a solo
+maintainer.
 
 ## License
 
